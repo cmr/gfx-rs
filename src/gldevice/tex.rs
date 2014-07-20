@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{gl, GlBackEnd, Texture, Sampler};
-use super::gl::types::{GLenum, GLuint, GLint, GLfloat, GLsizei, GLvoid};
-use tex::*;
+use {gl, GlBackEnd, Texture, Sampler};
+use gl::types::{GLenum, GLuint, GLint, GLfloat, GLsizei, GLvoid};
+use device::tex::*;
 use Blob;
 
 fn kind_to_gl(t: ::tex::TextureKind) -> GLenum {

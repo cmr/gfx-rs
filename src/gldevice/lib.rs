@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![feature(globs)]
+#![crate_name = "gldevice"]
+
 extern crate gl;
 extern crate libc;
+extern crate device;
 
 use log;
 use std;
-use a = super::attrib;
+use a = device::attrib;
 use std::fmt;
 use std::str;
 use std::collections::HashSet;
@@ -206,7 +210,7 @@ pub enum ErrorType {
 
 /// An OpenGL back-end with GLSL shaders
 pub struct GlBackEnd {
-    caps: super::Capabilities,
+    caps: device::Capabilities,
     info: Info,
     make_texture: fn(::tex::TextureInfo) -> Texture,
     /// Maps (by the index) from texture name to TextureInfo, so we can look up what texture target
@@ -217,10 +221,10 @@ pub struct GlBackEnd {
 
 impl GlBackEnd {
     /// Load OpenGL symbols and detect driver information
-    pub fn new(provider: &super::GlProvider) -> GlBackEnd {
+    pub fn new(provider: &device::GlProvider) -> GlBackEnd {
         gl::load_with(|s| provider.get_proc_address(s));
         let info = Info::get();
-        let caps = super::Capabilities {
+        let caps = device::Capabilities {
             shader_model: shade::get_model(),
             max_draw_buffers: get_uint(gl::MAX_DRAW_BUFFERS),
             max_texture_size: get_uint(gl::MAX_TEXTURE_SIZE),
@@ -271,8 +275,8 @@ impl GlBackEnd {
     }
 }
 
-impl super::ApiBackEnd for GlBackEnd {
-    fn get_capabilities<'a>(&'a self) -> &'a super::Capabilities {
+impl device::ApiBackEnd for GlBackEnd {
+    fn get_capabilities<'a>(&'a self) -> &'a device::Capabilities {
         &self.caps
     }
 
@@ -299,7 +303,7 @@ impl super::ApiBackEnd for GlBackEnd {
         }
     }
 
-    fn create_shader(&mut self, stage: super::shade::Stage, code: super::shade::ShaderSource) -> Result<Shader, super::shade::CreateShaderError> {
+    fn create_shader(&mut self, stage: device::shade::Stage, code: device::shade::ShaderSource) -> Result<Shader, device::shade::CreateShaderError> {
         let (name, info) = shade::create_shader(stage, code, self.get_capabilities().shader_model);
         info.map(|info| {
             let level = if name.is_err() { log::ERROR } else { log::WARN };
@@ -308,7 +312,7 @@ impl super::ApiBackEnd for GlBackEnd {
         name
     }
 
-    fn create_program(&mut self, shaders: &[Shader]) -> Result<super::shade::ProgramMeta, ()> {
+    fn create_program(&mut self, shaders: &[Shader]) -> Result<device::shade::ProgramMeta, ()> {
         let (meta, info) = shade::create_program(&self.caps, shaders);
         info.map(|info| {
             let level = if meta.is_err() { log::ERROR } else { log::WARN };
@@ -339,26 +343,26 @@ impl super::ApiBackEnd for GlBackEnd {
         }
     }
 
-    fn update_buffer(&mut self, buffer: Buffer, data: &super::Blob, usage: super::BufferUsage) {
+    fn update_buffer(&mut self, buffer: Buffer, data: &device::Blob, usage: device::BufferUsage) {
         gl::BindBuffer(gl::ARRAY_BUFFER, buffer);
         let size = data.get_size() as gl::types::GLsizeiptr;
         let raw = data.get_address() as *const gl::types::GLvoid;
         let usage = match usage {
-            super::UsageStatic  => gl::STATIC_DRAW,
-            super::UsageDynamic => gl::DYNAMIC_DRAW,
-            super::UsageStream  => gl::STREAM_DRAW,
+            device::UsageStatic  => gl::STATIC_DRAW,
+            device::UsageDynamic => gl::DYNAMIC_DRAW,
+            device::UsageStream  => gl::STREAM_DRAW,
         };
         unsafe {
             gl::BufferData(gl::ARRAY_BUFFER, size, raw, usage);
         }
     }
 
-    fn process(&mut self, request: super::CastRequest) {
+    fn process(&mut self, request: device::CastRequest) {
         match request {
-            super::Clear(data) => {
+            device::Clear(data) => {
                 let mut flags = match data.color {
                     //gl::ColorMask(gl::TRUE, gl::TRUE, gl::TRUE, gl::TRUE);
-                    Some(super::target::Color([r,g,b,a])) => {
+                    Some(device::target::Color([r,g,b,a])) => {
                         gl::ClearColor(r, g, b, a);
                         gl::COLOR_BUFFER_BIT
                     },
@@ -376,17 +380,17 @@ impl super::ApiBackEnd for GlBackEnd {
                 });
                 gl::Clear(flags);
             },
-            super::BindProgram(program) => {
+            device::BindProgram(program) => {
                 gl::UseProgram(program);
             },
-            super::BindArrayBuffer(array_buffer) => {
+            device::BindArrayBuffer(array_buffer) => {
                 if self.caps.array_buffer_supported {
                     gl::BindVertexArray(array_buffer);
                 } else {
                     error!("Ignored unsupported GL Request: {}", request)
                 }
             },
-            super::BindAttribute(slot, buffer, count, el_type, stride, offset) => {
+            device::BindAttribute(slot, buffer, count, el_type, stride, offset) => {
                 let gl_type = match el_type {
                     a::Int(_, a::U8, a::Unsigned)  => gl::UNSIGNED_BYTE,
                     a::Int(_, a::U8, a::Signed)    => gl::BYTE,
@@ -434,64 +438,64 @@ impl super::ApiBackEnd for GlBackEnd {
                 }
                 gl::EnableVertexAttribArray(slot as gl::types::GLuint);
             },
-            super::BindIndex(buffer) => {
+            device::BindIndex(buffer) => {
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, buffer);
             },
-            super::BindFrameBuffer(frame_buffer) => {
+            device::BindFrameBuffer(frame_buffer) => {
                 gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, frame_buffer);
             },
-            super::BindTarget(target, plane) => {
+            device::BindTarget(target, plane) => {
                 let attachment = match target {
-                    super::target::TargetColor(index) =>
+                    device::target::TargetColor(index) =>
                         gl::COLOR_ATTACHMENT0 + (index as gl::types::GLenum),
-                    super::target::TargetDepth => gl::DEPTH_ATTACHMENT,
-                    super::target::TargetStencil => gl::STENCIL_ATTACHMENT,
-                    super::target::TargetDepthStencil => gl::DEPTH_STENCIL_ATTACHMENT,
+                    device::target::TargetDepth => gl::DEPTH_ATTACHMENT,
+                    device::target::TargetStencil => gl::STENCIL_ATTACHMENT,
+                    device::target::TargetDepthStencil => gl::DEPTH_STENCIL_ATTACHMENT,
                 };
                 match plane {
-                    super::target::PlaneEmpty => gl::FramebufferRenderbuffer
+                    device::target::PlaneEmpty => gl::FramebufferRenderbuffer
                         (gl::DRAW_FRAMEBUFFER, attachment, gl::RENDERBUFFER, 0),
-                    super::target::PlaneSurface(name) => gl::FramebufferRenderbuffer
+                    device::target::PlaneSurface(name) => gl::FramebufferRenderbuffer
                         (gl::DRAW_FRAMEBUFFER, attachment, gl::RENDERBUFFER, name),
-                    super::target::PlaneTexture(tex, level) => gl::FramebufferTexture
+                    device::target::PlaneTexture(tex, level) => gl::FramebufferTexture
                         (gl::DRAW_FRAMEBUFFER, attachment, tex.name, level as gl::types::GLint),
-                    super::target::PlaneTextureLayer(tex, level, layer) => gl::FramebufferTextureLayer
+                    device::target::PlaneTextureLayer(tex, level, layer) => gl::FramebufferTextureLayer
                         (gl::DRAW_FRAMEBUFFER, attachment, tex.name, level as gl::types::GLint, layer as gl::types::GLint),
                 }
             },
-            super::BindUniformBlock(program, index, loc, buffer) => {
+            device::BindUniformBlock(program, index, loc, buffer) => {
                 gl::UniformBlockBinding(program, index as gl::types::GLuint, loc as gl::types::GLuint);
                 gl::BindBufferBase(gl::UNIFORM_BUFFER, loc as gl::types::GLuint, buffer);
             },
-            super::BindUniform(loc, uniform) => {
+            device::BindUniform(loc, uniform) => {
                 shade::bind_uniform(loc as gl::types::GLint, uniform);
             },
-            super::BindTexture(loc, tex, sam) => {
+            device::BindTexture(loc, tex, sam) => {
                 tex::bind_texture(loc as gl::types::GLuint, tex, sam, self);
             },
-            super::SetPrimitiveState(prim) => {
+            device::SetPrimitiveState(prim) => {
                 rast::bind_primitive(prim);
             },
-            super::SetDepthStencilState(depth, stencil, cull) => {
+            device::SetDepthStencilState(depth, stencil, cull) => {
                 rast::bind_stencil(stencil, cull);
                 rast::bind_depth(depth);
             },
-            super::SetBlendState(blend) => {
+            device::SetBlendState(blend) => {
                 rast::bind_blend(blend);
             },
-            super::UpdateBuffer(buffer, data) => {
-                self.update_buffer(buffer, data, super::UsageDynamic);
+            device::UpdateBuffer(buffer, data) => {
+                self.update_buffer(buffer, data, device::UsageDynamic);
             },
-            super::UpdateTexture(tex, image_info, data) => {
+            device::UpdateTexture(tex, image_info, data) => {
                 tex::update_texture(tex, image_info, data);
             },
-            super::Draw(start, count) => {
+            device::Draw(start, count) => {
                 gl::DrawArrays(gl::TRIANGLES,
                     start as gl::types::GLsizei,
                     count as gl::types::GLsizei);
                 self.check();
             },
-            super::DrawIndexed(start, count) => {
+            device::DrawIndexed(start, count) => {
                 let offset = start * (std::mem::size_of::<u16>() as u16);
                 unsafe {
                     gl::DrawElements(gl::TRIANGLES,
@@ -507,7 +511,7 @@ impl super::ApiBackEnd for GlBackEnd {
 
 #[cfg(test)]
 mod tests {
-    use super::Version;
+    use device::Version;
 
     #[test]
     fn test_version_parse() {

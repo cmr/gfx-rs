@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use r = super::super::rast;
-use super::super::target::Color;
-use super::gl;
+use r = device::rast;
+use device::target::Color;
+use gl;
 
 pub fn bind_primitive(p: r::Primitive) {
     gl::FrontFace(match p.front_face {

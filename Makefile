@@ -27,13 +27,15 @@ SRC_DIR               = src
 DEPS_DIR              = deps
 COMM_FILE             = $(SRC_DIR)/comm/lib.rs
 DEVICE_FILE           = $(SRC_DIR)/device/lib.rs
+GLDEVICE_FILE         = $(SRC_DIR)/gldevice/lib.rs
 GLFW_PLATFORM_FILE    = $(SRC_DIR)/glfw_platform/lib.rs
 RENDER_FILE           = $(SRC_DIR)/render/lib.rs
 EXAMPLE_FILES         = $(SRC_DIR)/examples/*/*.rs
 LIB_FILE              = $(SRC_DIR)/gfx/lib.rs
 
 COMM_INPUT            = $(SRC_DIR)/comm/*.rs
-DEVICE_INPUT          = $(SRC_DIR)/device/*.rs $(SRC_DIR)/device/gl/*.rs
+DEVICE_INPUT          = $(SRC_DIR)/device/*.rs
+GLDEVICE_INPUT        = $(SRC_DIR)/gldevice/gl/*.rs
 GLFW_PLATFORM_INPUT   = $(SRC_DIR)/glfw_platform/*.rs
 RENDER_INPUT          = $(SRC_DIR)/render/*.rs
 LIB_INPUT             = $(SRC_DIR)/gfx/*.rs
@@ -44,6 +46,7 @@ DEPS_LIB_SEARCH_FLAGS = $(patsubst %,-L %, $(DEPS_LIB_SEARCH_PATHS))
 LIB_DIR               = lib
 COMM_OUT              = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(COMM_FILE))
 DEVICE_OUT            = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(DEVICE_FILE))
+GLDEVICE_OUT          = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(GLDEVICE_FILE))
 GLFW_PLATFORM_OUT     = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(GLFW_PLATFORM_FILE))
 RENDER_OUT            = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(RENDER_FILE))
 LIB_OUT               = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(LIB_FILE))
@@ -51,6 +54,7 @@ LIB_OUT               = $(LIB_DIR)/$(shell $(RUSTC) --print-file-name $(LIB_FILE
 TEST_DIR              = test
 COMM_TEST_OUT         = $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(COMM_FILE))
 DEVICE_TEST_OUT       = $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(DEVICE_FILE))
+GLDEVICE_TEST_OUT     = $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(GLDEVICE_FILE))
 GLFW_PLATFORM_TEST_OUT= $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(GLFW_PLATFORM_FILE))
 RENDER_TEST_OUT       = $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(RENDER_FILE))
 LIB_TEST_OUT          = $(TEST_DIR)/$(shell $(RUSTC) --print-file-name --test $(LIB_FILE))
@@ -60,6 +64,7 @@ EXAMPLES_DIR          = examples
 DOC_DIR               = doc
 COMM_DOC_OUT          = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(COMM_FILE))
 DEVICE_DOC_OUT        = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(DEVICE_FILE))
+GLDEVICE_DOC_OUT      = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(GLDEVICE_FILE))
 GLFW_PLATFORM_DOC_OUT = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(GLFW_PLATFORM_FILE))
 RENDER_DOC_OUT        = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(RENDER_FILE))
 LIB_DOC_OUT           = $(DOC_DIR)/$(shell $(RUSTC) --print-crate-name $(LIB_FILE))
@@ -112,6 +117,10 @@ $(DEVICE_OUT): $(COMM_OUT) $(DEVICE_INPUT)
 	mkdir -p $(LIB_DIR)
 	$(RUSTC) $(LIB_INCLUDE_FLAGS) --out-dir=$(LIB_DIR) $(DEVICE_CFG) -O $(DEVICE_FILE)
 
+$(GLDEVICE_OUT): $(DEVICE_OUT) $(GLDEVICE_INPUT)
+	mkdir -p $(LIB_DIR)
+	$(RUSTC) $(LIB_INCLUDE_FLAGS) --out-dir=$(LIB_DIR) $(GLDEVICE_CFG) -O $(GLDEVICE_FILE)
+
 $(GLFW_PLATFORM_OUT): $(DEVICE_OUT) $(GLFW_PLATFORM_INPUT)
 	mkdir -p $(LIB_DIR)
 	$(RUSTC) $(LIB_INCLUDE_FLAGS) --out-dir=$(LIB_DIR) $(LIB_CFG) -O $(GLFW_PLATFORM_FILE)
@@ -142,6 +151,11 @@ $(DEVICE_TEST_OUT): $(COMM_OUT) $(DEVICE_INPUT)
 	mkdir -p $(TEST_DIR)
 	$(RUSTC) $(LIB_INCLUDE_FLAGS) --test --out-dir=$(TEST_DIR) $(DEVICE_CFG) -O $(DEVICE_FILE)
 	./$(DEVICE_TEST_OUT)
+
+$(GLDEVICE_TEST_OUT): $(DEVICE_OUT) $(GLDEVICE_INPUT)
+	mkdir -p $(TEST_DIR)
+	$(RUSTC) $(LIB_INCLUDE_FLAGS) --test --out-dir=$(TEST_DIR) $(GLDEVICE_CFG) -O $(GLDEVICE_FILE)
+	./$(GLDEVICE_TEST_OUT)
 
 $(GLFW_PLATFORM_TEST_OUT): $(DEVICE_OUT) $(GLFW_PLATFORM_INPUT)
 	mkdir -p $(TEST_DIR)
@@ -175,6 +189,10 @@ $(DEVICE_DOC_OUT): $(COMM_OUT) $(DEVICE_INPUT)
 	mkdir -p $(DOC_DIR)
 	$(RUSTDOC) $(LIB_INCLUDE_FLAGS) $(DEVICE_CFG) -o $(DOC_DIR) $(DEVICE_FILE)
 
+$(GLDEVICE_DOC_OUT): $(DEVICE_OUT) $(GLDEVICE_INPUT)
+	mkdir -p $(DOC_DIR)
+	$(RUSTDOC) $(LIB_INCLUDE_FLAGS) $(GLDEVICE_CFG) -o $(DOC_DIR) $(GLDEVICE_FILE)
+
 $(GLFW_PLATFORM_DOC_OUT): $(DEVICE_OUT) $(GLFW_PLATFORM_INPUT)
 	mkdir -p $(DOC_DIR)
 	$(RUSTDOC) $(LIB_INCLUDE_FLAGS) $(LIB_CFG) -o $(DOC_DIR) $(RENDER_FILE)
@@ -188,7 +206,7 @@ $(LIB_DOC_OUT): $(DEVICE_OUT) $(GLFW_PLATFORM_OUT) $(RENDER_OUT) $(LIB_INPUT)
 	$(RUSTDOC) $(LIB_INCLUDE_FLAGS) $(LIB_CFG) -o $(DOC_DIR) $(LIB_FILE)
 
 .PHONY: doc
-doc: $(COMM_DOC_OUT) $(DEVICE_DOC_OUT) $(GLFW_PLATFORM_DOC_OUT) $(RENDER_DOC_OUT) $(LIB_DOC_OUT)
+doc: $(COMM_DOC_OUT) $(DEVICE_DOC_OUT) $(GLDEVICE_DOC_OUT) $(GLFW_PLATFORM_DOC_OUT) $(RENDER_DOC_OUT) $(LIB_DOC_OUT)
 
 .PHONY: clean-doc
 clean-doc:

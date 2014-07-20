@@ -23,9 +23,10 @@
 #[phase(plugin, link)] extern crate log;
 extern crate libc;
 extern crate comm;
+#[cfg(gl)] extern crate gldevice;
 
 #[cfg(gl)] pub use gl::GlBackEnd;
-#[cfg(gl)] pub use dev = self::gl;
+#[cfg(gl)] pub use dev = self::gldevice;
 // #[cfg(d3d11)] ... // TODO
 
 use std::fmt;
@@ -37,7 +38,6 @@ pub mod rast;
 pub mod shade;
 pub mod target;
 pub mod tex;
-#[cfg(gl)] mod gl;
 
 #[deriving(Show)]
 pub struct Capabilities {
