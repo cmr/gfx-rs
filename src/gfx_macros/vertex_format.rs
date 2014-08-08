@@ -145,7 +145,7 @@ fn decode_count_and_type(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
     let modifier = find_modifier(cx, span, field.node.attrs.as_slice());
     match field.node.ty.node {
         ast::TyPath(ref p, _, _) => (
-            cx.expr_lit(span, ast::LitIntUnsuffixed(1)),
+            cx.expr_lit(span, ast::LitInt(1, ast::UnsuffixedIntLit(ast::Plus))),
             decode_type(cx, span, &p.segments[0].identifier, modifier),
         ),
         ast::TyFixedLengthVec(pty, expr) => (expr, match pty.node {
@@ -186,7 +186,7 @@ fn method_body(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
                             offset: unsafe {
                                 &(*(0u as *const $struct_ident)).$ident as *const _ as gfx::attrib::Offset
                             },
-                            stride: std::mem::size_of::<$struct_ident>() as gfx::attrib::Stride,
+                            stride: { use std::mem; mem::size_of::<$struct_ident>() as gfx::attrib::Stride },
                             name: $ident_str.to_string(),
                         });
                     }))

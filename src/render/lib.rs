@@ -26,7 +26,7 @@ extern crate comm;
 extern crate device;
 
 use std::fmt::Show;
-use std::mem::size_of;
+use std::mem;
 use std::vec::MoveItems;
 
 use backend = device::dev;
@@ -230,9 +230,7 @@ impl Renderer {
     /// Iterate over any errors that have been raised by the device when trying to issue commands
     /// since the last time this method was called.
     pub fn errors(&mut self) -> MoveItems<DeviceError> {
-        let errors = self.dispatcher.errors.clone();
-        self.dispatcher.errors.clear();
-        errors.move_iter()
+        mem::replace(&mut self.dispatcher.errors, Vec::new()).move_iter()
     }
 
     /// Clear the `Frame` as the `ClearData` specifies.
@@ -244,7 +242,7 @@ impl Renderer {
     /// Draw `slice` of `mesh` into `frame`, using a `bundle` of shader program and parameters, and
     /// a given draw state.
     pub fn draw<P: ProgramShell>(&mut self, mesh: &mesh::Mesh, slice: mesh::Slice,
-                                 frame: target::Frame, prog_shell: &P, state: state::DrawState)
+                                 frame: &target::Frame, prog_shell: &P, state: &state::DrawState)
                                  -> Result<(), DrawError> {
         // demand resources. This section needs the mutable self, so we are
         // unable to do this after we get a reference to any resource
@@ -268,7 +266,7 @@ impl Renderer {
         let vao = *self.dispatcher.get_any(|res| &res.array_buffers[h_vao]);
         self.cast(device::BindArrayBuffer(vao));
         // bind output frame
-        self.bind_frame(&frame);
+        self.bind_frame(frame);
         // bind shaders
         let program = self.dispatcher.resource.programs[ph].unwrap();
         match self.bind_shell(program, parameters) {
@@ -343,7 +341,7 @@ impl Renderer {
     /// Convenience function around `crate_buffer` and `Mesh::from`.
     pub fn create_mesh<T: mesh::VertexFormat + Send>(&mut self, data: Vec<T>) -> mesh::Mesh {
         let nv = data.len();
-        debug_assert!(nv >> (8 * size_of::<mesh::VertexCount>()) == 0);
+        debug_assert!(nv < { use std::num::Bounded; let val: mesh::VertexCount = Bounded::max_value(); val as uint });
         let buf = self.create_buffer(Some(data));
         mesh::Mesh::from::<T>(buf, nv as mesh::VertexCount)
     }
@@ -531,8 +529,8 @@ impl Renderer {
         self.cast(device::SetViewport(device::target::Rect {
             x: 0,
             y: 0,
-            w: frame.size[0],
-            h: frame.size[1],
+            w: frame.width,
+            h: frame.height,
         }));
         if frame.is_default() {
             // binding the default FBO, not touching our common one
