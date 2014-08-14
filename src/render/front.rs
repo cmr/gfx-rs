@@ -140,10 +140,7 @@ impl<D, B: device::ApiBackEnd<D>> Manager {
 	}
 
 	/// Connect a shader program with a parameter structure
-	pub fn connect_program<'a, L, T: ShaderParam<L>>
-						  (prog: &'a device::ProgramHandle, data: T)
-						  -> Result<shade::CustomShell<L, T>,
-						  shade::ParameterLinkError<'a>> {
+	pub fn connect_program<'a, L, T: ShaderParam<L>> (prog: &'a device::ProgramHandle, data: T) -> Result<shade::CustomShell<L, T>, shade::ParameterLinkError<'a>> {
 		let info = prog.get_info();
 		let input = (info.uniforms.as_slice(), info.blocks.as_slice(),
 			info.textures.as_slice());

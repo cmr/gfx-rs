@@ -9,6 +9,7 @@ extern crate glfw;
 extern crate gfx;
 #[phase(plugin)]
 extern crate gfx_macros;
+extern crate render;
 extern crate device;
 
 use cgmath::matrix::{Matrix, Matrix4};
@@ -204,7 +205,7 @@ fn main() {
         };
         let handle = man.create_program(VERTEX_SRC.clone(), FRAGMENT_SRC.clone(),
             &mut backend).unwrap();
-        let x: Program = gfx::Manager::connect_program(&handle, data).unwrap();
+        let x: render::shade::CustomShell<_ParamsLink, Params> = gfx::Manager::connect_program::<_ParamsLink, Params>(&handle, data).unwrap();
         x   //cannot determine a type for this bounded type parameter: unconstrained type
     };
 
