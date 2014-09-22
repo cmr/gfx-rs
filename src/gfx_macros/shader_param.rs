@@ -117,33 +117,6 @@ fn method_create(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
     }
 }
 
-/// Generates the the method body for `gfx::shade::ParamValues::fill_params`
-fn method_fill(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
-               substr: &generic::Substructure,
-               definition: P<ast::StructDef>,
-               path_root: ast::Ident)
-               -> P<ast::Expr> {
-    fail!()
-}
-
-/// A helper function that translates variable type (`i32`, `TextureHandle`, etc)
-/// into the corresponding shader var id type (`VarUniform`, `VarBlock`, or `VarTexture`)
-fn node_to_var_type(cx: &mut ext::base::ExtCtxt,
-                    span: codemap::Span, node: &ast::Ty_,
-                    path_root: ast::Ident) -> P<ast::Ty> {
-    fail!()
-}
-
-/// Extract all deriving() attributes into a separate array
-fn copy_deriving(attribs: &[ast::Attribute]) -> Vec<ast::Attribute> {
-    attribs.iter().filter(|at| {
-        match at.node.value.node {
-            ast::MetaList(ref s, _) => s.get() == "deriving",
-            _ => false,
-        }
-    }).map(|at| at.clone()).collect()
-}
-
 /// Decorator for `shader_param` attribute
 pub fn expand(context: &mut ext::base::ExtCtxt, span: codemap::Span,
               meta_item: &ast::MetaItem, item: &ast::Item,
@@ -321,3 +294,26 @@ pub fn expand(context: &mut ext::base::ExtCtxt, span: codemap::Span,
     };
     trait_def.expand(context, meta_item, item, fixup);
 }
+
+/// Generates the the method body for `gfx::shade::ParamValues::fill_params`
+fn method_fill(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
+               substr: &generic::Substructure,
+               definition: P<ast::StructDef>,
+               path_root: ast::Ident)
+               -> P<ast::Expr> {
+    fail!()
+}
+
+/// A helper function that translates variable type (`i32`, `TextureHandle`, etc)
+/// into the corresponding shader var id type (`VarUniform`, `VarBlock`, or `VarTexture`)
+fn node_to_var_type(cx: &mut ext::base::ExtCtxt,
+                    span: codemap::Span, node: &ast::Ty_,
+                    path_root: ast::Ident) -> P<ast::Ty> {
+    fail!()
+}
+
+/// Extract all deriving() attributes into a separate array
+fn copy_deriving(attribs: &[ast::Attribute]) -> Vec<ast::Attribute> {
+    fail!()
+}
+
