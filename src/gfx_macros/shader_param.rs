@@ -35,19 +35,6 @@ enum ParamError {
 /// Classify variable types (`i32`, `TextureParam`, etc) into the `ParamType`
 fn classify(node: &ast::Ty_) -> Result<ParamType, ParamError> {
     fail!()
-        /*
-    match *node {
-        ast::TyPath(ref path, _, _) => match path.segments.last() {
-            Some(segment) => match segment.identifier.name.as_str() {
-                "RawBufferHandle" => Ok(ParamBlock),
-                "TextureParam" => Ok(ParamTexture),
-                "TextureHandle" => Err(ErrorDeprecatedTexture),
-                _ => Ok(ParamUniform),
-            },
-            None => Ok(ParamUniform),
-        },
-        _ => Ok(ParamUniform),
-    }*/
 }
 
 /// Generates the the method body for `gfx::shade::ParamValues::create_link`
@@ -136,76 +123,7 @@ fn method_fill(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
                definition: P<ast::StructDef>,
                path_root: ast::Ident)
                -> P<ast::Expr> {
-    match *substr.fields {
-        generic::Struct(ref fields) => {
-            let out = &substr.nonself_args[1];
-            let max_num = cx.expr_uint(span, fields.len());
-            let mut calls = vec![
-                quote_stmt!(cx, $out.uniforms.reserve($max_num);),
-                quote_stmt!(cx, $out.blocks.reserve($max_num);),
-                quote_stmt!(cx, $out.textures.reserve($max_num);),
-            ];
-            calls.push_all_move(definition.fields.iter().zip(fields.iter())
-                                .map(|(def, f)| {
-                let value_id = &f.self_;
-                let var_id = cx.expr_field_access(
-                    span,
-                    substr.nonself_args[0].clone(),
-                    f.name.unwrap()
-                    );
-                match classify(&def.node.ty.node) {
-                    Ok(ParamUniform) => quote_stmt!(cx,
-                        $var_id.map_or((), |id| {
-                            if $out.uniforms.len() <= id as uint {
-                                unsafe { $out.uniforms.set_len(id as uint + 1) }
-                            }
-                            *$out.uniforms.get_mut(id as uint) = $value_id.to_uniform()
-                        })
-                    ),
-                    Ok(ParamBlock)   => quote_stmt!(cx,
-                        $var_id.map_or((), |id| {
-                            if $out.blocks.len() <= id as uint {
-                                unsafe { $out.blocks.set_len(id as uint + 1) }
-                            }
-                            *$out.blocks.get_mut(id as uint) = {$value_id}
-                        })
-                    ),
-                    Ok(ParamTexture) => quote_stmt!(cx,
-                        $var_id.map_or((), |id| {
-                            if $out.textures.len() <= id as uint {
-                                unsafe { $out.textures.set_len(id as uint + 1) }
-                            }
-                            *$out.textures.get_mut(id as uint) = {$value_id}
-                        })
-                    ),
-                    Err(_) => {
-                        cx.span_err(span, format!(
-                            "Invalid uniform: {}",
-                            f.name.unwrap().as_str(),
-                            ).as_slice()
-                        );
-                        cx.stmt_expr(cx.expr_uint(span, 0))
-                    },
-                }
-            }).collect());
-            let view = cx.view_use_simple(
-                span,
-                ast::Inherited,
-                cx.path(span, vec![
-                    cx.ident_of("self"),
-                    path_root,
-                    cx.ident_of("gfx"),
-                    cx.ident_of("shade"),
-                    cx.ident_of("ToUniform"),
-                ])
-            );
-            cx.expr_block(cx.block_all(span, vec![view], calls, None))
-        },
-        _ => {
-            cx.span_err(span, "Unable to implement `ShaderParam::bind()` on a non-structure");
-            cx.expr_lit(span, ast::LitNil)
-        }
-    }
+    fail!()
 }
 
 /// A helper function that translates variable type (`i32`, `TextureHandle`, etc)
