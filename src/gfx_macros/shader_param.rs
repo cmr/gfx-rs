@@ -34,6 +34,8 @@ enum ParamError {
 
 /// Classify variable types (`i32`, `TextureParam`, etc) into the `ParamType`
 fn classify(node: &ast::Ty_) -> Result<ParamType, ParamError> {
+    fail!()
+        /*
     match *node {
         ast::TyPath(ref path, _, _) => match path.segments.last() {
             Some(segment) => match segment.identifier.name.as_str() {
@@ -45,7 +47,7 @@ fn classify(node: &ast::Ty_) -> Result<ParamType, ParamError> {
             None => Ok(ParamUniform),
         },
         _ => Ok(ParamUniform),
-    }
+    }*/
 }
 
 /// Generates the the method body for `gfx::shade::ParamValues::create_link`
