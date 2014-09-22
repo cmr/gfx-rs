@@ -33,7 +33,6 @@ use syntax::fold::Folder;
 use syntax::ptr::P;
 
 pub mod shader_param;
-pub mod vertex_format;
 
 /// Entry point for the plugin phase
 #[plugin_registrar]
@@ -43,9 +42,6 @@ pub fn registrar(reg: &mut rustc::plugin::Registry) {
     // Register the `#[shader_param]` attribute.
     reg.register_syntax_extension(intern("shader_param"),
         base::Decorator(box shader_param::expand));
-    // Register the `#[vertex_format]` attribute.
-    reg.register_syntax_extension(intern("vertex_format"),
-        base::Decorator(box vertex_format::expand));
 }
 
 /// Scan through the field's attributes and extract the field vertex name. If
