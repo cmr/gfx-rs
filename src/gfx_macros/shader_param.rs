@@ -131,28 +131,7 @@ fn method_fill(cx: &mut ext::base::ExtCtxt, span: codemap::Span,
 fn node_to_var_type(cx: &mut ext::base::ExtCtxt,
                     span: codemap::Span, node: &ast::Ty_,
                     path_root: ast::Ident) -> P<ast::Ty> {
-    let id = match classify(node) {
-        Ok(ParamUniform) => "VarUniform",
-        Ok(ParamBlock)   => "VarBlock",
-        Ok(ParamTexture) => "VarTexture",
-        Err(ErrorDeprecatedTexture) => {
-            cx.span_err(span, "Use gfx::shade::TextureParam for texture vars instead of gfx::shade::TextureHandle");
-            ""
-        },
-        Err(ErrorUnknown) => {
-            cx.span_err(span, format!("Unknown node: {}", node).as_slice());
-            ""
-        },
-    };
-    cx.ty_option(cx.ty_path(
-        cx.path(span, vec![
-            path_root,
-            cx.ident_of("gfx"),
-            cx.ident_of("shade"),
-            cx.ident_of(id),
-        ]),
-        None
-    ))
+    fail!()
 }
 
 /// Extract all deriving() attributes into a separate array
